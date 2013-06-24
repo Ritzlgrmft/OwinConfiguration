@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace OwinConfiguration
@@ -20,26 +21,26 @@ namespace OwinConfiguration
 
 		public Task Invoke(IDictionary<string, object> environment)
 		{
-			Console.WriteLine("Entry\t{0}\t{1}",
-				GetValueFormEnvironment(environment, OwinConstants.RequestMethod), 
-				GetValueFormEnvironment(environment, OwinConstants.RequestPath));
+			string method = GetValueFromEnvironment(environment, OwinConstants.RequestMethod);
+			string path = GetValueFromEnvironment(environment, OwinConstants.RequestPath);
+
+			Console.WriteLine("Entry\t{0}\t{1}", method, path);
 
 			Stopwatch stopWatch = Stopwatch.StartNew();
 			return _next(environment).ContinueWith(t =>
 			{
-				Console.WriteLine("Exit\t{0}\t{1}\t{2}", 
-					stopWatch.ElapsedMilliseconds,
-					GetValueFormEnvironment(environment, OwinConstants.ResponseStatusCode), 
-					GetValueFormEnvironment(environment, OwinConstants.ResponseReasonPhrase));
+				Console.WriteLine("Exit\t{0}\t{1}\t{2}\t{3}\t{4}", method, path, stopWatch.ElapsedMilliseconds,
+					GetValueFromEnvironment(environment, OwinConstants.ResponseStatusCode), 
+					GetValueFromEnvironment(environment, OwinConstants.ResponseReasonPhrase));
 				return t;
 			});
 		}
 
-		private static object GetValueFormEnvironment(IDictionary<string, object> environment, string key)
+		private static string GetValueFromEnvironment(IDictionary<string, object> environment, string key)
 		{
 			object value;
 			environment.TryGetValue(key, out value);
-			return value;
+			return Convert.ToString(value, CultureInfo.InvariantCulture);
 		}
 	}
 }
