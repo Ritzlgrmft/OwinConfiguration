@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace OwinConfiguration
@@ -24,7 +26,15 @@ namespace OwinConfiguration
 			string method = GetValueFromEnvironment(environment, OwinConstants.RequestMethod);
 			string path = GetValueFromEnvironment(environment, OwinConstants.RequestPath);
 
-			Console.WriteLine("Entry\t{0}\t{1}", method, path);
+			string requestBody;
+			Stream stream = (Stream)environment[OwinConstants.RequestBody];
+			using (StreamReader sr = new StreamReader(stream))
+			{
+				requestBody = sr.ReadToEnd();
+			}
+			environment[OwinConstants.RequestBody] = new MemoryStream(Encoding.UTF8.GetBytes(requestBody));
+
+			Console.WriteLine("Entry\t{0}\t{1}\t{2}", method, path, requestBody);
 
 			Stopwatch stopWatch = Stopwatch.StartNew();
 			return _next(environment).ContinueWith(t =>
